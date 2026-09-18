@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "responses", "black", "ruff"]
+dev = ["pytest", "responses", "black", "ruff", "pre-commit"]
 
 [tool.ruff]
 line-length = 100

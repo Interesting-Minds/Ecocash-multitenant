@@ -1,20 +1,20 @@
+from ..exceptions import EcoCashError, EcoCashTimeoutError
 from ..http import EcoCashHTTPClient
-from ..models import TenantConfig, PaymentRequest, PaymentResponse
-from ..utils import normalize_phone, validate_amount, validate_currency
-from ..logging import get_logger
 from ..idempotency import (
-    IdempotencyStore,
     IdempotencyRecord,
+    IdempotencyStore,
     PaymentState,
 )
+from ..logging import get_logger
+from ..models import PaymentRequest, PaymentResponse, TenantConfig
 from ..resilience import (
-    RetryConfig,
     CircuitBreakerConfig,
     CircuitBreakerOpenError,
-    with_retry,
+    RetryConfig,
     get_circuit_breaker,
+    with_retry,
 )
-from ..exceptions import EcoCashError, EcoCashTimeoutError
+from ..utils import normalize_phone, validate_amount, validate_currency
 
 PATHS = {
     "sandbox": "/v2/payment/instant/c2b/sandbox",
@@ -121,7 +121,7 @@ class C2BAPI:
                 record.mark_failed(str(exc))
                 self.store.update(record)
             raise
-        except EcoCashTimeoutError as exc:
+        except EcoCashTimeoutError:
             self.logger.error(
                 "Timed out after retries: ref=%s — marking TIMED_OUT", request.source_reference
             )

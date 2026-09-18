@@ -2,8 +2,7 @@ import json
 import sqlite3
 import threading
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime
 
 from .record import IdempotencyRecord, PaymentState
 
@@ -11,9 +10,8 @@ from .record import IdempotencyRecord, PaymentState
 
 
 class IdempotencyStore(ABC):
-
     @abstractmethod
-    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]: ...
+    def get(self, tenant_id: str, source_reference: str) -> IdempotencyRecord | None: ...
 
     @abstractmethod
     def save(self, record: IdempotencyRecord) -> None: ...
@@ -84,7 +82,7 @@ class SQLiteIdempotencyStore(IdempotencyStore):
             conn.execute(_CREATE_TABLE)
             conn.commit()
 
-    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]:
+    def get(self, tenant_id: str, source_reference: str) -> IdempotencyRecord | None:
         with self._lock, self._conn() as conn:
             row = conn.execute(_SELECT, (tenant_id, source_reference)).fetchone()
         if row is None:
@@ -168,7 +166,7 @@ class RedisIdempotencyStore(IdempotencyStore):
     def _key(self, tenant_id: str, source_reference: str) -> str:
         return f"{self._prefix}:{tenant_id}:{source_reference}"
 
-    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]:
+    def get(self, tenant_id: str, source_reference: str) -> IdempotencyRecord | None:
         raw = self._r.get(self._key(tenant_id, source_reference))
         if raw is None:
             return None
@@ -231,7 +229,7 @@ class InMemoryIdempotencyStore(IdempotencyStore):
         self._store: dict[tuple, IdempotencyRecord] = {}
         self._lock = threading.Lock()
 
-    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]:
+    def get(self, tenant_id: str, source_reference: str) -> IdempotencyRecord | None:
         with self._lock:
             return self._store.get((tenant_id, source_reference))
 

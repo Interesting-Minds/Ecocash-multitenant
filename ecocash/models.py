@@ -1,7 +1,5 @@
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Optional
 import uuid
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -23,14 +21,14 @@ class PaymentRequest:
     amount: float
     reason: str
     source_reference: str = field(default_factory=lambda: str(uuid.uuid4()))
-    currency: Optional[str] = None
-    client_name: Optional[str] = None
+    currency: str | None = None
+    client_name: str | None = None
 
 
 @dataclass
 class PaymentResponse:
     source_reference: str
-    ecocash_transaction_reference: Optional[str]
+    ecocash_transaction_reference: str | None
     status: str
     message: str
     raw: dict = field(default_factory=dict)
@@ -43,14 +41,14 @@ class RefundRequest:
     amount: float
     reason: str
     refund_correlator: str = field(default_factory=lambda: str(uuid.uuid4()))
-    currency: Optional[str] = None
-    client_name: Optional[str] = None
+    currency: str | None = None
+    client_name: str | None = None
 
 
 @dataclass
 class RefundResponse:
     refund_correlator: str
-    ecocash_transaction_reference: Optional[str]
+    ecocash_transaction_reference: str | None
     status: str
     message: str
     raw: dict = field(default_factory=dict)
@@ -65,9 +63,9 @@ class TransactionStatusRequest:
 @dataclass
 class TransactionStatusResponse:
     source_reference: str
-    ecocash_transaction_reference: Optional[str]
+    ecocash_transaction_reference: str | None
     status: str
-    amount: Optional[float]
-    currency: Optional[str]
+    amount: float | None
+    currency: str | None
     message: str
     raw: dict = field(default_factory=dict)

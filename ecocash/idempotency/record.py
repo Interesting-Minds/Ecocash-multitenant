@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
 
 
 class PaymentState(str, Enum):
@@ -21,11 +20,11 @@ class IdempotencyRecord:
     reason: str
     state: PaymentState = PaymentState.PENDING
     attempts: int = 0
-    ecocash_reference: Optional[str] = None
-    error_message: Optional[str] = None
+    ecocash_reference: str | None = None
+    error_message: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    response_payload: Optional[dict] = None
+    response_payload: dict | None = None
 
     def is_terminal(self) -> bool:
         return self.state in (PaymentState.SUCCESS, PaymentState.FAILED)

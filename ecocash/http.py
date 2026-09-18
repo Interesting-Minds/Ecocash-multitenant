@@ -1,8 +1,6 @@
 import requests
-from requests import Session, Response
-from typing import Optional
+from requests import Response, Session
 
-from .models import TenantConfig
 from .exceptions import (
     EcoCashAPIError,
     EcoCashAuthError,
@@ -10,6 +8,7 @@ from .exceptions import (
     EcoCashTimeoutError,
 )
 from .logging import get_logger, mask_dict
+from .models import TenantConfig
 
 BASE_URLS = {
     "sandbox": "https://api.ecocash.co.zw",
@@ -22,7 +21,7 @@ class EcoCashHTTPClient:
         self.config = config
         self.base_url = BASE_URLS[config.environment]
         self.logger = get_logger(f"ecocash.http.{config.merchant_code}")
-        self._session: Optional[Session] = None
+        self._session: Session | None = None
 
     @property
     def session(self) -> Session:
@@ -45,9 +44,9 @@ class EcoCashHTTPClient:
         except requests.Timeout:
             self.logger.error("Request timed out: %s", url)
             raise EcoCashTimeoutError(f"Request to {url} timed out")
-        except requests.ConnectionError as e:
-            self.logger.error("Network error: %s", str(e))
-            raise EcoCashNetworkError(f"Network error: {e}")
+        except requests.ConnectionError as exc:
+            self.logger.error("Network error: %s", str(exc))
+            raise EcoCashNetworkError(f"Network error: {exc}") from exc
 
         return self._handle_response(response)
 
@@ -64,11 +63,11 @@ class EcoCashHTTPClient:
 
         try:
             data = response.json()
-        except Exception:
+        except ValueError as exc:
             raise EcoCashAPIError(
                 f"Non-JSON response: {response.text[:200]}",
                 status_code=response.status_code,
-            )
+            ) from exc
 
         if not response.ok:
             msg = data.get("message") or data.get("error") or "API error"
