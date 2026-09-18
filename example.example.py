@@ -45,7 +45,7 @@ with EcoCashClient(config) as client:
 
     print(payment.status, payment.transaction_id)
 
-    # The charge response above is not final — the end user still has to
+    # The charge response above is not final,, the end user still has to
     # confirm on their phone. Poll the status endpoint with exponential
     # backoff until the transaction reaches a terminal status.
     try:
@@ -63,7 +63,7 @@ with EcoCashClient(config) as client:
 
     print(status.status, status.amount)
 
-    # Refund (tranType=REF) — use RefundRequest(tran_type="REV") for a
+    # Refund (tranType=REF) use RefundRequest(tran_type="REV") for a
     # merchant-initiated reversal instead.
     if status.status == "SUCCESS":
         refund = client.refund.refund(
