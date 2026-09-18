@@ -2,7 +2,6 @@ import logging
 import re
 from typing import Any
 
-
 SENSITIVE_KEYS = {"api_key", "apikey", "x-api-key", "pin", "password", "token", "bearer"}
 PHONE_PATTERN = re.compile(r"(263\d{2})\d+(\d{3})")
 

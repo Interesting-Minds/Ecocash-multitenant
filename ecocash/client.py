@@ -1,11 +1,11 @@
 from typing import Optional
 
-from .models import TenantConfig
-from .http import EcoCashHTTPClient
 from .api import C2BAPI, RefundAPI, TransactionStatusAPI
+from .http import EcoCashHTTPClient
 from .idempotency import IdempotencyStore, SQLiteIdempotencyStore
-from .resilience import RetryConfig, CircuitBreakerConfig
 from .logging import get_logger
+from .models import TenantConfig
+from .resilience import CircuitBreakerConfig, RetryConfig
 
 
 class EcoCashClient:
@@ -21,14 +21,14 @@ class EcoCashClient:
         self.logger = get_logger(f"ecocash.client.{config.merchant_code}")
         self._http = EcoCashHTTPClient(config)
 
-        # Default to SQLite store unless caller provides one or opts out
         if enable_idempotency and idempotency_store is None:
             idempotency_store = SQLiteIdempotencyStore()
 
         store = idempotency_store if enable_idempotency else None
 
         self.c2b = C2BAPI(
-            config, self._http,
+            config,
+            self._http,
             idempotency_store=store,
             retry_config=retry_config,
             circuit_breaker_config=circuit_breaker_config,

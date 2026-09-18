@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "ecocash-multitenant"
@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Multitenant Python library for the EcoCash Open API"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31.0",
 ]
@@ -18,3 +18,8 @@ dev = ["pytest", "responses", "black", "ruff"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'

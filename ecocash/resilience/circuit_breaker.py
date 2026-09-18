@@ -11,16 +11,15 @@ logger = get_logger("ecocash.resilience.circuit_breaker")
 
 
 class CircuitState(str, Enum):
-    CLOSED = "CLOSED"       # normal operation
-    OPEN = "OPEN" # fast-failing not calling EcoCash
-    HALF_OPEN = "HALF_OPEN" # probe -> one request allowed through
+    CLOSED = "CLOSED"  # normal operation
+    OPEN = "OPEN"  # fast-failing not calling EcoCash
+    HALF_OPEN = "HALF_OPEN"  # probe -> one request allowed through
 
 
 class CircuitBreakerOpenError(EcoCashError):
     def __init__(self, tenant_id: str, retry_after: float):
         super().__init__(
-            f"Circuit breaker OPEN for tenant '{tenant_id}'. "
-            f"Retry after {retry_after:.1f}s."
+            f"Circuit breaker OPEN for tenant '{tenant_id}'. " f"Retry after {retry_after:.1f}s."
         )
         self.tenant_id = tenant_id
         self.retry_after = retry_after
@@ -28,9 +27,9 @@ class CircuitBreakerOpenError(EcoCashError):
 
 @dataclass
 class CircuitBreakerConfig:
-    failure_threshold: int = 5      # consecutive failures before opening
+    failure_threshold: int = 5  # consecutive failures before opening
     recovery_timeout: float = 60.0  # seconds to wait before half-open probe
-    success_threshold: int = 2      # consecutive successes to close again
+    success_threshold: int = 2  # consecutive successes to close again
 
 
 class CircuitBreaker:
@@ -54,7 +53,8 @@ class CircuitBreaker:
             if elapsed >= self.config.recovery_timeout:
                 logger.info(
                     "Circuit HALF-OPEN for tenant '%s' (elapsed=%.1fs)",
-                    self.tenant_id, elapsed,
+                    self.tenant_id,
+                    elapsed,
                 )
                 self._state = CircuitState.HALF_OPEN
         return self._state
@@ -63,9 +63,7 @@ class CircuitBreaker:
         with self._lock:
             state = self._resolve_state()
             if state == CircuitState.OPEN:
-                retry_after = self.config.recovery_timeout - (
-                    time.monotonic() - self._opened_at
-                )
+                retry_after = self.config.recovery_timeout - (time.monotonic() - self._opened_at)
                 raise CircuitBreakerOpenError(self.tenant_id, max(retry_after, 0))
 
         try:
@@ -98,7 +96,9 @@ class CircuitBreaker:
                 self._opened_at = time.monotonic()
                 logger.error(
                     "Circuit OPEN for tenant '%s' after %d failures. Last: %s",
-                    self.tenant_id, self._failure_count, exc,
+                    self.tenant_id,
+                    self._failure_count,
+                    exc,
                 )
 
     def reset(self) -> None:
@@ -114,9 +114,7 @@ _registry: dict[str, CircuitBreaker] = {}
 _registry_lock = threading.Lock()
 
 
-def get_circuit_breaker(
-    tenant_id: str, config: CircuitBreakerConfig = None
-) -> CircuitBreaker:
+def get_circuit_breaker(tenant_id: str, config: CircuitBreakerConfig = None) -> CircuitBreaker:
     with _registry_lock:
         if tenant_id not in _registry:
             _registry[tenant_id] = CircuitBreaker(tenant_id, config)
