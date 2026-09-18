@@ -1,0 +1,8 @@
+requests>=2.31.0
+
+[dev]
+pytest
+responses
+black
+ruff
+pre-commit
