@@ -1,14 +1,14 @@
 import random
 import time
 from dataclasses import dataclass
-from typing import Callable, Tuple, Type
+from typing import Any, Callable
 
 from ..exceptions import (
-    EcoCashError,
     EcoCashAPIError,
     EcoCashAuthError,
-    EcoCashTimeoutError,
+    EcoCashError,
     EcoCashNetworkError,
+    EcoCashTimeoutError,
 )
 from ..logging import get_logger
 
@@ -43,11 +43,11 @@ def _compute_delay(attempt: int, config: RetryConfig) -> float:
 
 
 def with_retry(
-    fn: Callable,
+    fn: Callable[[], Any],
     config: RetryConfig,
-    on_retry: Callable[[int, Exception], None] = None,
-) -> any:
-    last_exc = None
+    on_retry: Callable[[int, Exception], None] | None = None,
+) -> Any:
+    last_exc: Exception | None = None
     for attempt in range(config.max_attempts):
         try:
             return fn()
@@ -66,7 +66,7 @@ def with_retry(
             last_exc = exc
         except RETRYABLE as exc:
             last_exc = exc
-        except EcoCashError as exc:
+        except EcoCashError:
             raise
 
         delay = _compute_delay(attempt, config)
@@ -82,4 +82,6 @@ def with_retry(
         time.sleep(delay)
 
     logger.error("All %d attempts exhausted: %s", config.max_attempts, last_exc)
-    raise last_exc
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("Retry completed without a result or exception")
