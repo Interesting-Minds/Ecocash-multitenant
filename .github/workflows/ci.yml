@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint (black + ruff)
+    name: Pre-commit checks (black + ruff)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,14 +18,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dev dependencies
-        run: pip install -e ".[dev]"
-
-      - name: Check formatting with black
-        run: black --check --diff .
-
-      - name: Lint with ruff
-        run: ruff check .
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
 
   test:
     name: Test (py${{ matrix.python-version }})

@@ -1,8 +1,8 @@
 import threading
 import time
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
-from typing import Callable
 
 from ..exceptions import EcoCashError
 from ..logging import get_logger
