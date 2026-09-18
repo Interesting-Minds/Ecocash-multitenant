@@ -1,6 +1,6 @@
 # ecocash-python
 
-A clean, multitenant Python library for the EcoCash Open API — built for production use in multi-merchant platforms.
+A clean, multitenant Python library for the EcoCash Open API built for production use in multi-merchant platforms.
 
 **Features at a glance:**
 - Multitenant — per-tenant credentials, isolated circuit breakers
@@ -91,7 +91,7 @@ with EcoCashClient(config) as client:
     print(payment.ecocash_transaction_reference)   # ECO-XXXXXXX
 ```
 
-Calling `charge()` again with the same `source_reference` returns the cached response immediately — no second HTTP request, no second charge.
+Calling `charge()` again with the same `source_reference` returns the cached response immediately no second HTTP request, no second charge.
 
 ---
 
@@ -210,8 +210,8 @@ States:
 
 | State | Behaviour |
 |---|---|
-| `CLOSED` | Normal — all requests go through |
-| `OPEN` | Fast-fail — raises `CircuitBreakerOpenError` immediately |
+| `CLOSED` | Normal all requests go through |
+| `OPEN` | Fast-fail raises `CircuitBreakerOpenError` immediately |
 | `HALF_OPEN` | Probe — one request allowed; success closes, failure re-opens |
 
 Circuit breakers are per `merchant_code`. One tenant's failures do not affect others.
@@ -292,8 +292,8 @@ print(record.ecocash_reference)
 | State | Meaning |
 |---|---|
 | `PENDING` | Created, not yet resolved |
-| `SUCCESS` | EcoCash confirmed — safe to fulfil |
-| `FAILED` | Terminal error — do not retry with same reference |
+| `SUCCESS` | EcoCash confirmed safe to fulfil |
+| `FAILED` | Terminal error do not retry with same reference |
 | `TIMED_OUT` | Timed out after all retries — check status endpoint |
 
 ---
@@ -311,7 +311,7 @@ resp = client.c2b.charge(PaymentRequest(
     reason="Order #1042",
     source_reference="uuid",    # optional — auto-generated if omitted
     currency="USD",             # optional — falls back to TenantConfig default
-    client_name="Acme Store",   # optional
+    client_name="test Store",   # optional
 ))
 ```
 
@@ -424,7 +424,7 @@ ecocash/
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - `requests >= 2.31.0`
 - `redis` (optional — only for `RedisIdempotencyStore`)
 
