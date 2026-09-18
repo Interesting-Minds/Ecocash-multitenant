@@ -184,7 +184,7 @@ def test_pending_record_reuses_reference():
     client = make_client(store=store)
 
     # Inject a PENDING record simulates a stalled prior attempt
-    from ecocash.idempotency.record import IdempotencyRecord, PaymentState
+    from ecocash.idempotency.record import IdempotencyRecord
 
     pending = IdempotencyRecord(
         source_reference="ref-stalled",
