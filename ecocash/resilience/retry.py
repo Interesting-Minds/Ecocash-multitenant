@@ -24,10 +24,10 @@ NON_RETRYABLE = (EcoCashAuthError,)
 @dataclass
 class RetryConfig:
     max_attempts: int = 3
-    base_delay: float = 1.0     
-    max_delay: float = 30.0      
+    base_delay: float = 1.0
+    max_delay: float = 30.0
     backoff_factor: float = 2.0
-    jitter: bool = True 
+    jitter: bool = True
 
 
 def _is_retryable_api_error(exc: EcoCashAPIError) -> bool:
@@ -36,7 +36,7 @@ def _is_retryable_api_error(exc: EcoCashAPIError) -> bool:
 
 
 def _compute_delay(attempt: int, config: RetryConfig) -> float:
-    delay = min(config.base_delay * (config.backoff_factor ** attempt), config.max_delay)
+    delay = min(config.base_delay * (config.backoff_factor**attempt), config.max_delay)
     if config.jitter:
         delay = random.uniform(0, delay)
     return delay
@@ -58,7 +58,9 @@ def with_retry(
             if not _is_retryable_api_error(exc):
                 logger.warning(
                     "Non-retryable API error %s on attempt %d: %s",
-                    exc.status_code, attempt + 1, exc,
+                    exc.status_code,
+                    attempt + 1,
+                    exc,
                 )
                 raise
             last_exc = exc
@@ -70,7 +72,10 @@ def with_retry(
         delay = _compute_delay(attempt, config)
         logger.warning(
             "Attempt %d/%d failed: %s — retrying in %.2fs",
-            attempt + 1, config.max_attempts, last_exc, delay,
+            attempt + 1,
+            config.max_attempts,
+            last_exc,
+            delay,
         )
         if on_retry:
             on_retry(attempt + 1, last_exc)

@@ -7,22 +7,20 @@ from typing import Optional
 
 from .record import IdempotencyRecord, PaymentState
 
-
 # Abstract base
+
 
 class IdempotencyStore(ABC):
 
     @abstractmethod
-    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]:
-        ...
+    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]: ...
 
     @abstractmethod
-    def save(self, record: IdempotencyRecord) -> None:
-        ...
+    def save(self, record: IdempotencyRecord) -> None: ...
 
     @abstractmethod
-    def update(self, record: IdempotencyRecord) -> None:
-        ...
+    def update(self, record: IdempotencyRecord) -> None: ...
+
 
 # SQLite backend  (zero-dep, great for single-server)
 
@@ -95,35 +93,41 @@ class SQLiteIdempotencyStore(IdempotencyStore):
 
     def save(self, record: IdempotencyRecord) -> None:
         with self._lock, self._conn() as conn:
-            conn.execute(_INSERT, (
-                record.source_reference,
-                record.tenant_id,
-                record.phone,
-                record.amount,
-                record.currency,
-                record.reason,
-                record.state.value,
-                record.attempts,
-                record.ecocash_reference,
-                record.error_message,
-                json.dumps(record.response_payload) if record.response_payload else None,
-                record.created_at.isoformat(),
-                record.updated_at.isoformat(),
-            ))
+            conn.execute(
+                _INSERT,
+                (
+                    record.source_reference,
+                    record.tenant_id,
+                    record.phone,
+                    record.amount,
+                    record.currency,
+                    record.reason,
+                    record.state.value,
+                    record.attempts,
+                    record.ecocash_reference,
+                    record.error_message,
+                    json.dumps(record.response_payload) if record.response_payload else None,
+                    record.created_at.isoformat(),
+                    record.updated_at.isoformat(),
+                ),
+            )
             conn.commit()
 
     def update(self, record: IdempotencyRecord) -> None:
         with self._lock, self._conn() as conn:
-            conn.execute(_UPDATE, (
-                record.state.value,
-                record.attempts,
-                record.ecocash_reference,
-                record.error_message,
-                json.dumps(record.response_payload) if record.response_payload else None,
-                record.updated_at.isoformat(),
-                record.tenant_id,
-                record.source_reference,
-            ))
+            conn.execute(
+                _UPDATE,
+                (
+                    record.state.value,
+                    record.attempts,
+                    record.ecocash_reference,
+                    record.error_message,
+                    json.dumps(record.response_payload) if record.response_payload else None,
+                    record.updated_at.isoformat(),
+                    record.tenant_id,
+                    record.source_reference,
+                ),
+            )
             conn.commit()
 
     @staticmethod
@@ -147,6 +151,7 @@ class SQLiteIdempotencyStore(IdempotencyStore):
 
 
 # Redis backend  (for distributed / multi-process deployments)
+
 
 class RedisIdempotencyStore(IdempotencyStore):
     """
@@ -199,24 +204,27 @@ class RedisIdempotencyStore(IdempotencyStore):
 
     @staticmethod
     def _serialize(record: IdempotencyRecord) -> str:
-        return json.dumps({
-            "source_reference": record.source_reference,
-            "tenant_id": record.tenant_id,
-            "phone": record.phone,
-            "amount": record.amount,
-            "currency": record.currency,
-            "reason": record.reason,
-            "state": record.state.value,
-            "attempts": record.attempts,
-            "ecocash_reference": record.ecocash_reference,
-            "error_message": record.error_message,
-            "response_payload": record.response_payload,
-            "created_at": record.created_at.isoformat(),
-            "updated_at": record.updated_at.isoformat(),
-        })
+        return json.dumps(
+            {
+                "source_reference": record.source_reference,
+                "tenant_id": record.tenant_id,
+                "phone": record.phone,
+                "amount": record.amount,
+                "currency": record.currency,
+                "reason": record.reason,
+                "state": record.state.value,
+                "attempts": record.attempts,
+                "ecocash_reference": record.ecocash_reference,
+                "error_message": record.error_message,
+                "response_payload": record.response_payload,
+                "created_at": record.created_at.isoformat(),
+                "updated_at": record.updated_at.isoformat(),
+            }
+        )
 
 
 # In-memory backend  (testing / CI only not for production)
+
 
 class InMemoryIdempotencyStore(IdempotencyStore):
     def __init__(self):

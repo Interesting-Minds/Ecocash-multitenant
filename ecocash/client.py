@@ -28,7 +28,8 @@ class EcoCashClient:
         store = idempotency_store if enable_idempotency else None
 
         self.c2b = C2BAPI(
-            config, self._http,
+            config,
+            self._http,
             idempotency_store=store,
             retry_config=retry_config,
             circuit_breaker_config=circuit_breaker_config,

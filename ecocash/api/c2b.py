@@ -35,9 +35,7 @@ class C2BAPI:
         self.http = http
         self.store = idempotency_store
         self.retry_config = retry_config or RetryConfig()
-        self.circuit_breaker = get_circuit_breaker(
-            config.merchant_code, circuit_breaker_config
-        )
+        self.circuit_breaker = get_circuit_breaker(config.merchant_code, circuit_breaker_config)
         self.logger = get_logger(f"ecocash.c2b.{config.merchant_code}")
 
     def charge(self, request: PaymentRequest) -> PaymentResponse:
@@ -46,7 +44,7 @@ class C2BAPI:
         validate_amount(request.amount)
         validate_currency(currency)
 
-        # Idempotency check 
+        # Idempotency check
         record = None
         if self.store:
             record = self.store.get(self.config.merchant_code, request.source_reference)
@@ -92,10 +90,13 @@ class C2BAPI:
 
         path = PATHS[self.config.environment]
 
-        # Circuit breaker + retry 
+        # Circuit breaker + retry
         self.logger.info(
             "Initiating C2B: ref=%s amount=%s %s phone=%s",
-            request.source_reference, request.amount, currency, phone[:6] + "***",
+            request.source_reference,
+            request.amount,
+            currency,
+            phone[:6] + "***",
         )
 
         def _attempt():

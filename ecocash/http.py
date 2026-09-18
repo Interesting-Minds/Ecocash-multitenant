@@ -28,20 +28,20 @@ class EcoCashHTTPClient:
     def session(self) -> Session:
         if self._session is None:
             self._session = requests.Session()
-            self._session.headers.update({
-                "X-API-KEY": self.config.api_key,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            })
+            self._session.headers.update(
+                {
+                    "X-API-KEY": self.config.api_key,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                }
+            )
         return self._session
 
     def post(self, path: str, payload: dict) -> dict:
         url = f"{self.base_url}{path}"
         self.logger.debug("POST %s payload=%s", url, mask_dict(payload))
         try:
-            response: Response = self.session.post(
-                url, json=payload, timeout=self.config.timeout
-            )
+            response: Response = self.session.post(url, json=payload, timeout=self.config.timeout)
         except requests.Timeout:
             self.logger.error("Request timed out: %s", url)
             raise EcoCashTimeoutError(f"Request to {url} timed out")
