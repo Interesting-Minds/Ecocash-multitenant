@@ -1,4 +1,8 @@
 example.py
 
-example.py
 ecocash_idempotency.db
+
+# Build and packaging artifacts
+*.egg-info/
+build/
+dist/
