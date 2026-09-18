@@ -93,7 +93,12 @@ class EcoCashHTTPClient:
             ) from exc
 
         if not response.ok:
-            msg = data.get("statusMessage") or data.get("message") or data.get("error") or "API error"
+            msg = (
+                data.get("statusMessage")
+                or data.get("message")
+                or data.get("error")
+                or "API error"
+            )
             raise EcoCashAPIError(msg, status_code=response.status_code, response=data)
 
         return data

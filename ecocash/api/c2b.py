@@ -135,7 +135,9 @@ class C2BAPI:
                 )
             )
         except CircuitBreakerOpenError as exc:
-            self.logger.error("Circuit breaker OPEN: correlator=%s — %s", request.client_correlator, exc)
+            self.logger.error(
+                "Circuit breaker OPEN: correlator=%s — %s", request.client_correlator, exc
+            )
             if record:
                 record.mark_failed(str(exc))
                 self.store.update(record)
