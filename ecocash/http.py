@@ -28,11 +28,13 @@ class EcoCashHTTPClient:
     def session(self) -> Session:
         if self._session is None:
             self._session = requests.Session()
-            self._session.headers.update({
-                "X-API-KEY": self.config.api_key,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            })
+            self._session.headers.update(
+                {
+                    "X-API-KEY": self.config.api_key,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                }
+            )
         return self._session
 
     def post(self, path: str, payload: dict) -> dict:
