@@ -1,0 +1,251 @@
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/.github/workflows/ci.yml repo/Ecocash-multitenant-feat-wehook/.github/workflows/ci.yml
+--- orig/Ecocash-multitenant-feat-wehook/.github/workflows/ci.yml	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/.github/workflows/ci.yml	2026-09-18 13:22:36.771412504 +0000
+@@ -8,7 +8,7 @@
+ 
+ jobs:
+   lint:
+-    name: Pre-commit checks (black + ruff)
++    name: Pre-commit checks (ruff)
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/.gitignore repo/Ecocash-multitenant-feat-wehook/.gitignore
+--- orig/Ecocash-multitenant-feat-wehook/.gitignore	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/.gitignore	2026-09-18 13:22:48.955231119 +0000
+@@ -1,14 +1,11 @@
+-
+ ecocash_idempotency.db
+ 
+-<<<<<<< HEAD
+-*.egg
+-
+-!dist/
+-!dist/my-package.egg
+-=======
+ # Build and packaging artifacts
++*.egg
+ *.egg-info/
+ build/
+ dist/
+->>>>>>> refs/remotes/origin/feat/wehook
++!dist/
++!dist/my-package.egg
++
++example.py
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/.pre-commit-config.yaml repo/Ecocash-multitenant-feat-wehook/.pre-commit-config.yaml
+--- orig/Ecocash-multitenant-feat-wehook/.pre-commit-config.yaml	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/.pre-commit-config.yaml	2026-09-18 13:22:34.920520389 +0000
+@@ -1,12 +1,6 @@
+ exclude: ^a\.patch$
+ 
+ repos:
+-  - repo: https://github.com/psf/black
+-    rev: 24.10.0
+-    hooks:
+-      - id: black
+-        language_version: python3
+-
+   - repo: https://github.com/astral-sh/ruff-pre-commit
+     rev: v0.7.4
+     hooks:
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/README.md repo/Ecocash-multitenant-feat-wehook/README.md
+--- orig/Ecocash-multitenant-feat-wehook/README.md	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/README.md	2026-09-18 13:22:56.327992168 +0000
+@@ -1,7 +1,6 @@
+ # ecocash-python
+ 
+ [![CI](https://github.com/Interesting-Minds/Ecocash-multitenant/actions/workflows/ci.yml/badge.svg)](https://github.com/Interesting-Minds/Ecocash-multitenant/actions/workflows/ci.yml)
+-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+ [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+ [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+ [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/example.example.py repo/Ecocash-multitenant-feat-wehook/example.example.py
+--- orig/Ecocash-multitenant-feat-wehook/example.example.py	1970-01-01 00:00:00.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/example.example.py	2026-09-18 13:22:46.724460121 +0000
+@@ -0,0 +1,77 @@
++from ecocash import (
++    EcoCashAPIError,
++    EcoCashClient,
++    EcoCashValidationError,
++    PaymentRequest,
++    PollTimeoutError,
++    RefundRequest,
++    TenantConfig,
++)
++
++config = TenantConfig(
++    username="YOUR_SANDBOX_USERNAME",
++    password="YOUR_SANDBOX_PASSWORD",
++    merchant_code="YOUR_MERCHANT_CODE",
++    merchant_pin="YOUR_MERCHANT_PIN",
++    merchant_number="YOUR_MERCHANT_NUMBER",
++    terminal_id="YOUR_TERMINAL_ID",
++    merchant_name="YOUR STORE NAME",
++    super_merchant_name="ECOCASH",
++    location="Harare",
++    country_code="ZW",
++    environment="sandbox",
++    currency="USD",
++)
++
++TEST_MSISDN = "0770000000"  # your whitelisted sandbox test number
++
++with EcoCashClient(config) as client:
++
++    # Charge (tranType=MER)
++    try:
++        payment = client.c2b.charge(
++            PaymentRequest(
++                end_user_id=TEST_MSISDN,
++                amount=25.00,
++                description="Invoice INV-001",
++            )
++        )
++    except EcoCashValidationError as e:
++        print(f"Validation: {e} (field={e.field})")
++        raise SystemExit(1)
++    except EcoCashAPIError as e:
++        print(f"API error {e.status_code}: {e}")
++        raise SystemExit(1)
++
++    print(payment.status, payment.transaction_id)
++
++    # The charge response above is not final — the end user still has to
++    # confirm on their phone. Poll the status endpoint with exponential
++    # backoff until the transaction reaches a terminal status.
++    try:
++        status = client.wait_for_completion(
++            end_user_id=TEST_MSISDN,
++            client_correlator=payment.client_correlator,
++            interval_seconds=3.0,      # first retry after ~3s
++            backoff_factor=1.5,        # then 4.5s, 6.75s, ...
++            max_interval_seconds=15.0,  # capped at 15s between polls
++            timeout_seconds=120.0,     # give up after 2 minutes
++        )
++    except PollTimeoutError as e:
++        print(f"Still pending after polling: {e}")
++        raise SystemExit(1)
++
++    print(status.status, status.amount)
++
++    # Refund (tranType=REF) — use RefundRequest(tran_type="REV") for a
++    # merchant-initiated reversal instead.
++    if status.status == "SUCCESS":
++        refund = client.refund.refund(
++            RefundRequest(
++                original_ecocash_reference=payment.transaction_id,
++                end_user_id=TEST_MSISDN,
++                amount=25.00,
++                description="Customer request",
++            )
++        )
++        print(refund.status)
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/example.py repo/Ecocash-multitenant-feat-wehook/example.py
+--- orig/Ecocash-multitenant-feat-wehook/example.py	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/example.py	1970-01-01 00:00:00.000000000 +0000
+@@ -1,77 +0,0 @@
+-from ecocash import (
+-    EcoCashAPIError,
+-    EcoCashClient,
+-    EcoCashValidationError,
+-    PaymentRequest,
+-    PollTimeoutError,
+-    RefundRequest,
+-    TenantConfig,
+-)
+-
+-config = TenantConfig(
+-    username="sbx_6cfb7c9c9582",
+-    password="8cYvkZF8stnSneWPuLn!",
+-    merchant_code="001535",
+-    merchant_pin="1234",
+-    merchant_number="788732685",
+-    terminal_id="UAT00003",
+-    merchant_name="UAT STORE 3",
+-    super_merchant_name="ECOCASH",
+-    location="Harare",
+-    country_code="ZW",
+-    environment="sandbox",
+-    currency="USD",
+-)
+-
+-TEST_MSISDN = "0778587612"  # your whitelisted sandbox test number
+-
+-with EcoCashClient(config) as client:
+-
+-    # Charge (tranType=MER)
+-    try:
+-        payment = client.c2b.charge(
+-            PaymentRequest(
+-                end_user_id=TEST_MSISDN,
+-                amount=25.00,
+-                description="Invoice INV-001",
+-            )
+-        )
+-    except EcoCashValidationError as e:
+-        print(f"Validation: {e} (field={e.field})")
+-        raise SystemExit(1)
+-    except EcoCashAPIError as e:
+-        print(f"API error {e.status_code}: {e}")
+-        raise SystemExit(1)
+-
+-    print(payment.status, payment.transaction_id)
+-
+-    # The charge response above is not final — the end user still has to
+-    # confirm on their phone. Poll the status endpoint with exponential
+-    # backoff until the transaction reaches a terminal status.
+-    try:
+-        status = client.wait_for_completion(
+-            end_user_id=TEST_MSISDN,
+-            client_correlator=payment.client_correlator,
+-            interval_seconds=3.0,      # first retry after ~3s
+-            backoff_factor=1.5,        # then 4.5s, 6.75s, ...
+-            max_interval_seconds=15.0,  # capped at 15s between polls
+-            timeout_seconds=120.0,     # give up after 2 minutes
+-        )
+-    except PollTimeoutError as e:
+-        print(f"Still pending after polling: {e}")
+-        raise SystemExit(1)
+-
+-    print(status.status, status.amount)
+-
+-    # Refund (tranType=REF) — use RefundRequest(tran_type="REV") for a
+-    # merchant-initiated reversal instead.
+-    if status.status == "SUCCESS":
+-        refund = client.refund.refund(
+-            RefundRequest(
+-                original_ecocash_reference=payment.transaction_id,
+-                end_user_id=TEST_MSISDN,
+-                amount=25.00,
+-                description="Customer request",
+-            )
+-        )
+-        print(refund.status)
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/pyproject.toml repo/Ecocash-multitenant-feat-wehook/pyproject.toml
+--- orig/Ecocash-multitenant-feat-wehook/pyproject.toml	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/pyproject.toml	2026-09-18 13:22:39.223971663 +0000
+@@ -14,12 +14,7 @@
+ ]
+ 
+ [project.optional-dependencies]
+-dev = ["pytest", "responses", "black", "ruff", "pre-commit"]
++dev = ["pytest", "responses", "ruff", "pre-commit"]
+ 
+ [tool.ruff]
+ line-length = 100
+-
+-[tool.black]
+-line-length = 100
+-target-version = ["py310", "py311", "py312"]
+-include = '\.pyi?$'
+diff -ruN '--exclude=__pycache__' orig/Ecocash-multitenant-feat-wehook/requirements-dev.txt repo/Ecocash-multitenant-feat-wehook/requirements-dev.txt
+--- orig/Ecocash-multitenant-feat-wehook/requirements-dev.txt	2026-09-18 13:17:17.000000000 +0000
++++ repo/Ecocash-multitenant-feat-wehook/requirements-dev.txt	2026-09-18 13:22:59.403697289 +0000
+@@ -2,6 +2,5 @@
+ 
+ pytest
+ responses
+-black
+ ruff
+ pre-commit

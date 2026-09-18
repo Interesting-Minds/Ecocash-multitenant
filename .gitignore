@@ -1,14 +1,11 @@
-
 ecocash_idempotency.db
 
-<<<<<<< HEAD
-*.egg
-
-!dist/
-!dist/my-package.egg
-=======
 # Build and packaging artifacts
+*.egg
 *.egg-info/
 build/
 dist/
->>>>>>> refs/remotes/origin/feat/wehook
+!dist/
+!dist/my-package.egg
+
+example.py
