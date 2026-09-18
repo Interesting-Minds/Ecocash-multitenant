@@ -1,21 +1,14 @@
 # ecocash-python
 
-A clean, multitenant Python library for the EcoCash Open API — built for production use in multi-merchant platforms. The only Python EcoCash library with built-in idempotency, retry, and circuit breaking.
+A clean, multitenant Python library for the EcoCash Open API — built for production use in multi-merchant platforms.
 
----
-
-## What makes this different
-
-Every other EcoCash SDK (Dart, Ruby, JavaScript) wraps the 3 API endpoints and stops there. This library adds a fault-tolerance layer that matters in production:
-
-| Feature | Other SDKs | ecocash-python |
-|---|---|---|
-| Multitenant (per-tenant credentials) | ❌ | ✅ |
-| Idempotency store (no double charges) | ❌ | ✅ |
-| Retry with exponential backoff + jitter | ❌ | ✅ |
-| Circuit breaker per tenant | ❌ | ✅ |
-| PII masking in logs | ❌ | ✅ |
-| Pluggable storage (SQLite / Redis / custom) | ❌ | ✅ |
+**Features at a glance:**
+- Multitenant — per-tenant credentials, isolated circuit breakers
+- Idempotency store — no double charges on network failures
+- Retry with exponential backoff + full jitter
+- Per-tenant circuit breaker
+- Structured logging with PII masking
+- Pluggable storage backends (SQLite / Redis / custom)
 
 ---
 
@@ -440,4 +433,3 @@ ecocash/
 ## License
 
 MIT
-# Ecocash-multitenant
