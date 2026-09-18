@@ -1,5 +1,3 @@
-from typing import Optional
-
 import requests
 from requests import Response, Session
 

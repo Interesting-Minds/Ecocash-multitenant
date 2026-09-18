@@ -1,5 +1,3 @@
-from typing import Optional
-
 from .api import C2BAPI, RefundAPI, TransactionStatusAPI
 from .http import EcoCashHTTPClient
 from .idempotency import IdempotencyStore, SQLiteIdempotencyStore

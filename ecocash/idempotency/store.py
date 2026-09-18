@@ -3,7 +3,6 @@ import sqlite3
 import threading
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Optional
 
 from .record import IdempotencyRecord, PaymentState
 
@@ -12,7 +11,7 @@ from .record import IdempotencyRecord, PaymentState
 
 class IdempotencyStore(ABC):
     @abstractmethod
-    def get(self, tenant_id: str, source_reference: str) -> Optional[IdempotencyRecord]: ...
+    def get(self, tenant_id: str, source_reference: str) -> IdempotencyRecord | None: ...
 
     @abstractmethod
     def save(self, record: IdempotencyRecord) -> None: ...
