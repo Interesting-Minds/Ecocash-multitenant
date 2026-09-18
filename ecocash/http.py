@@ -23,7 +23,7 @@ class EcoCashHTTPClient:
         self.config = config
         self.base_url = BASE_URLS[config.environment]
         self.logger = get_logger(f"ecocash.http.{config.merchant_code}")
-        self._session: Optional[Session] = None
+        self._session: Session | None = None
 
     @property
     def session(self) -> Session:
@@ -42,9 +42,7 @@ class EcoCashHTTPClient:
         url = f"{self.base_url}{path}"
         self.logger.debug("POST %s payload=%s", url, mask_dict(payload))
         try:
-            response: Response = self.session.post(
-                url, json=payload, timeout=self.config.timeout
-            )
+            response: Response = self.session.post(url, json=payload, timeout=self.config.timeout)
         except requests.Timeout:
             self.logger.error("Request timed out: %s", url)
             raise EcoCashTimeoutError(f"Request to {url} timed out")

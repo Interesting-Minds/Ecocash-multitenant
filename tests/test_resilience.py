@@ -1,16 +1,18 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from ecocash import (
-    EcoCashClient,
-    TenantConfig,
-    PaymentRequest,
-    PaymentState,
-    InMemoryIdempotencyStore,
-    RetryConfig,
     CircuitBreakerConfig,
     CircuitBreakerOpenError,
-    EcoCashNetworkError,
     EcoCashAPIError,
+    EcoCashClient,
+    EcoCashNetworkError,
+    InMemoryIdempotencyStore,
+    PaymentRequest,
+    PaymentState,
+    RetryConfig,
+    TenantConfig,
 )
 from ecocash.resilience.circuit_breaker import _registry
 
@@ -117,9 +119,11 @@ def test_all_retries_exhausted_marks_failed():
         retry_config=RetryConfig(max_attempts=2, base_delay=0, jitter=False),
     )
 
-    with patch.object(client._http, "post", side_effect=EcoCashNetworkError("down")):
-        with pytest.raises(EcoCashNetworkError):
-            client.c2b.charge(make_request())
+    with (
+        patch.object(client._http, "post", side_effect=EcoCashNetworkError("down")),
+        pytest.raises(EcoCashNetworkError),
+    ):
+        client.c2b.charge(make_request())
 
     record = store.get("TEST01", "ref-001")
     assert record.state == PaymentState.FAILED
@@ -163,9 +167,11 @@ def test_non_retryable_api_error_does_not_retry():
         call_count += 1
         raise EcoCashAPIError("bad request", status_code=400)
 
-    with patch.object(client._http, "post", side_effect=bad_request):
-        with pytest.raises(EcoCashAPIError):
-            client.c2b.charge(make_request())
+    with (
+        patch.object(client._http, "post", side_effect=bad_request),
+        pytest.raises(EcoCashAPIError),
+    ):
+        client.c2b.charge(make_request())
 
     assert call_count == 1
 

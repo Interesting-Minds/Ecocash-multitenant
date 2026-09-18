@@ -57,8 +57,14 @@ This means a network blip between your server and EcoCash **cannot cause a doubl
 ## Installation
 
 ```bash
-pip install requests
+pip install -r requirements.txt
 pip install -e .
+```
+
+For contributing (tests, linting, pre-commit hooks):
+
+```bash
+pip install -r requirements-dev.txt
 ```
 
 Once published to PyPI:
@@ -190,7 +196,7 @@ client = EcoCashClient(
 )
 ```
 
-Retried errors: network errors, timeouts, HTTP 408/429/500/502/503/504.  
+Retried errors: network errors, timeouts, HTTP 408/429/500/502/503/504.
 Never retried: HTTP 400/401/403/422 (your fault, not transient).
 
 ---

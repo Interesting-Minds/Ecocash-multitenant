@@ -12,9 +12,9 @@ class EcoCashClient:
     def __init__(
         self,
         config: TenantConfig,
-        idempotency_store: Optional[IdempotencyStore] = None,
-        retry_config: Optional[RetryConfig] = None,
-        circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
+        idempotency_store: IdempotencyStore | None = None,
+        retry_config: RetryConfig | None = None,
+        circuit_breaker_config: CircuitBreakerConfig | None = None,
         enable_idempotency: bool = True,
     ):
         self.config = config
