@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Pre-commit checks (black + ruff)
+    name: Pre-commit checks (ruff)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

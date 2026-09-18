@@ -24,6 +24,7 @@ from .models import (
     TransactionStatusRequest,
     TransactionStatusResponse,
 )
+from .polling import PaymentPoller, PollTimeoutError
 from .resilience import (
     CircuitBreakerConfig,
     CircuitBreakerOpenError,
@@ -43,9 +44,11 @@ __all__ = [
     "IdempotencyRecord",
     "IdempotencyStore",
     "InMemoryIdempotencyStore",
+    "PaymentPoller",
     "PaymentRequest",
     "PaymentResponse",
     "PaymentState",
+    "PollTimeoutError",
     "RedisIdempotencyStore",
     "RefundRequest",
     "RefundResponse",

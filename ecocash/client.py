@@ -2,7 +2,8 @@ from .api import C2BAPI, RefundAPI, TransactionStatusAPI
 from .http import EcoCashHTTPClient
 from .idempotency import IdempotencyStore, SQLiteIdempotencyStore
 from .logging import get_logger
-from .models import TenantConfig
+from .models import TenantConfig, TransactionStatusResponse
+from .polling import PaymentPoller
 from .resilience import CircuitBreakerConfig, RetryConfig
 
 
@@ -40,6 +41,31 @@ class EcoCashClient:
             config.environment,
             "enabled" if store else "disabled",
         )
+
+    def wait_for_completion(
+        self,
+        end_user_id: str,
+        client_correlator: str,
+        interval_seconds: float = 3.0,
+        timeout_seconds: float = 120.0,
+        max_interval_seconds: float = 15.0,
+        backoff_factor: float = 1.5,
+    ) -> TransactionStatusResponse:
+        """Poll the status endpoint with exponential backoff until the
+        transaction reaches a terminal status (SUCCESS, FAILED, etc.), or
+        raise PollTimeoutError if it doesn't resolve in time.
+
+        Each retry's delay is `interval_seconds * backoff_factor` up to
+        `max_interval_seconds`, until `timeout_seconds` elapses in total.
+        """
+        poller = PaymentPoller(
+            self.status,
+            interval_seconds=interval_seconds,
+            timeout_seconds=timeout_seconds,
+            max_interval_seconds=max_interval_seconds,
+            backoff_factor=backoff_factor,
+        )
+        return poller.poll_until_terminal(end_user_id, client_correlator)
 
     def close(self):
         self._http.close()

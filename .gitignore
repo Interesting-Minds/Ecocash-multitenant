@@ -1,0 +1,11 @@
+ecocash_idempotency.db
+
+# Build and packaging artifacts
+*.egg
+*.egg-info/
+build/
+dist/
+!dist/
+!dist/my-package.egg
+
+example.py

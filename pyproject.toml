@@ -14,12 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "responses", "black", "ruff", "pre-commit"]
+dev = ["pytest", "responses", "ruff", "pre-commit"]
 
 [tool.ruff]
 line-length = 100
-
-[tool.black]
-line-length = 100
-target-version = ["py310", "py311", "py312"]
-include = '\.pyi?$'
