@@ -46,7 +46,7 @@ class C2BAPI:
         validate_amount(request.amount)
         validate_currency(currency)
 
-        # ── Idempotency check ────────────────────────────────────────────────
+        # Idempotency check 
         record = None
         if self.store:
             record = self.store.get(self.config.merchant_code, request.source_reference)
@@ -79,7 +79,7 @@ class C2BAPI:
                 self.store.save(record)
                 self.logger.debug("Idempotency record created: ref=%s", request.source_reference)
 
-        # ── Build payload ────────────────────────────────────────────────────
+        # Build payload
         payload = {
             "customerMsisdn": phone,
             "amount": str(request.amount),
@@ -92,7 +92,7 @@ class C2BAPI:
 
         path = PATHS[self.config.environment]
 
-        # ── Circuit breaker + retry ──────────────────────────────────────────
+        # Circuit breaker + retry 
         self.logger.info(
             "Initiating C2B: ref=%s amount=%s %s phone=%s",
             request.source_reference, request.amount, currency, phone[:6] + "***",
@@ -135,7 +135,7 @@ class C2BAPI:
                 self.store.update(record)
             raise
 
-        # ── Persist success ──────────────────────────────────────────────────
+        # Persist success
         ecocash_ref = data.get("ecocashTransactionReference")
         if record:
             record.mark_success(ecocash_ref, data)

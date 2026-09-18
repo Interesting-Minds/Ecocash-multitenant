@@ -48,7 +48,7 @@ def make_request(ref="ref-001"):
     )
 
 
-# ── Test 1: successful payment persists to store ─────────────────────────────
+# Test 1: successful payment persists to store 
 
 def test_successful_payment_persisted():
     store = InMemoryIdempotencyStore()
@@ -66,8 +66,7 @@ def test_successful_payment_persisted():
     assert record.attempts == 1
 
 
-# ── Test 2: idempotency — second call returns cached, no HTTP ────────────────
-
+# Test 2: idempotency second call returns cached, no HTTP 
 def test_idempotency_returns_cached_on_second_call():
     store = InMemoryIdempotencyStore()
     client = make_client(store=store)
@@ -82,7 +81,7 @@ def test_idempotency_returns_cached_on_second_call():
     assert "idempotency" in resp2.message.lower() or resp2.message
 
 
-# ── Test 3: retry on network error then succeeds ─────────────────────────────
+# Test 3: retry on network error then succeeds
 
 def test_retries_on_network_error_then_succeeds():
     store = InMemoryIdempotencyStore()
@@ -107,8 +106,7 @@ def test_retries_on_network_error_then_succeeds():
     assert record.attempts == 3
 
 
-# ── Test 4: all retries exhausted → FAILED in store ─────────────────────────
-
+# Test 4: all retries exhausted, FAILED in store 
 def test_all_retries_exhausted_marks_failed():
     store = InMemoryIdempotencyStore()
     client = make_client(
@@ -125,7 +123,7 @@ def test_all_retries_exhausted_marks_failed():
     assert record.attempts == 2
 
 
-# ── Test 5: circuit breaker opens after threshold ────────────────────────────
+# Test 5: circuit breaker opens after threshold 
 
 def test_circuit_breaker_opens_after_failures():
     store = InMemoryIdempotencyStore()
@@ -142,12 +140,12 @@ def test_circuit_breaker_opens_after_failures():
         with pytest.raises(EcoCashNetworkError):
             client.c2b.charge(make_request("ref-002"))
 
-        # Circuit should now be OPEN — fast-fail without HTTP call
+        # Circuit should now be OPEN fast-fail without HTTP call
         with pytest.raises(CircuitBreakerOpenError):
             client.c2b.charge(make_request("ref-003"))
 
 
-# ── Test 6: non-retryable 400 does not retry ─────────────────────────────────
+# Test 6: non-retryable 400 does not retry
 
 def test_non_retryable_api_error_does_not_retry():
     store = InMemoryIdempotencyStore()
@@ -166,13 +164,13 @@ def test_non_retryable_api_error_does_not_retry():
     assert call_count == 1
 
 
-# ── Test 7: PENDING record reuses same reference ──────────────────────────────
+# Test 7: PENDING record reuses same reference
 
 def test_pending_record_reuses_reference():
     store = InMemoryIdempotencyStore()
     client = make_client(store=store)
 
-    # Inject a PENDING record (simulates a stalled prior attempt)
+    # Inject a PENDING record simulates a stalled prior attempt
     from ecocash.idempotency.record import IdempotencyRecord, PaymentState
     pending = IdempotencyRecord(
         source_reference="ref-stalled",

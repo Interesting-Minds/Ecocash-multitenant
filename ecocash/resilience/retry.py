@@ -24,10 +24,10 @@ NON_RETRYABLE = (EcoCashAuthError,)
 @dataclass
 class RetryConfig:
     max_attempts: int = 3
-    base_delay: float = 1.0      # seconds
-    max_delay: float = 30.0      # seconds
+    base_delay: float = 1.0     
+    max_delay: float = 30.0      
     backoff_factor: float = 2.0
-    jitter: bool = True          # full jitter — prevents thundering herd
+    jitter: bool = True 
 
 
 def _is_retryable_api_error(exc: EcoCashAPIError) -> bool:

@@ -8,9 +8,7 @@ from typing import Optional
 from .record import IdempotencyRecord, PaymentState
 
 
-# ---------------------------------------------------------------------------
 # Abstract base
-# ---------------------------------------------------------------------------
 
 class IdempotencyStore(ABC):
 
@@ -26,10 +24,7 @@ class IdempotencyStore(ABC):
     def update(self, record: IdempotencyRecord) -> None:
         ...
 
-
-# ---------------------------------------------------------------------------
-# SQLite backend  (zero-dep, great for single-server / AFRERP style)
-# ---------------------------------------------------------------------------
+# SQLite backend  (zero-dep, great for single-server)
 
 _CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS ecocash_idempotency (
@@ -151,9 +146,7 @@ class SQLiteIdempotencyStore(IdempotencyStore):
         )
 
 
-# ---------------------------------------------------------------------------
 # Redis backend  (for distributed / multi-process deployments)
-# ---------------------------------------------------------------------------
 
 class RedisIdempotencyStore(IdempotencyStore):
     """
@@ -223,9 +216,7 @@ class RedisIdempotencyStore(IdempotencyStore):
         })
 
 
-# ---------------------------------------------------------------------------
-# In-memory backend  (testing / CI only — not for production)
-# ---------------------------------------------------------------------------
+# In-memory backend  (testing / CI only not for production)
 
 class InMemoryIdempotencyStore(IdempotencyStore):
     def __init__(self):

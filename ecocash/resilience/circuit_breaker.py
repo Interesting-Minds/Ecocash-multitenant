@@ -12,8 +12,8 @@ logger = get_logger("ecocash.resilience.circuit_breaker")
 
 class CircuitState(str, Enum):
     CLOSED = "CLOSED"       # normal operation
-    OPEN = "OPEN"           # fast-failing, not calling EcoCash
-    HALF_OPEN = "HALF_OPEN" # probe: one request allowed through
+    OPEN = "OPEN" # fast-failing not calling EcoCash
+    HALF_OPEN = "HALF_OPEN" # probe -> one request allowed through
 
 
 class CircuitBreakerOpenError(EcoCashError):
@@ -109,7 +109,7 @@ class CircuitBreaker:
         logger.info("Circuit manually RESET for tenant '%s'", self.tenant_id)
 
 
-# Global registry — one circuit breaker per tenant, shared across client instances
+# Global registry one circuit breaker per tenant, shared across client instances
 _registry: dict[str, CircuitBreaker] = {}
 _registry_lock = threading.Lock()
 

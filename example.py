@@ -9,7 +9,7 @@ from ecocash import (
 )
 
 config = TenantConfig(
-    api_key="your-api-key",
+    api_key="api-key",
     merchant_code="MERCHANT001",
     environment="sandbox",
     currency="USD",
