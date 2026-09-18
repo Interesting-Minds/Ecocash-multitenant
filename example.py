@@ -9,46 +9,60 @@ from ecocash import (
 )
 
 config = TenantConfig(
-    api_key="api-key",
-    merchant_code="MERCHANT001",
+    username="sbx_6cfb7c9c9582",
+    password="c2J4XzZjZmI3YzljOTU4Mjo4Y1l2a1pGOHN0blNuZVdQdUxuIQ==",
+    merchant_code="001535",
+    merchant_pin="1234",
+    merchant_number="788732685",
+    terminal_id="UAT00003",
+    merchant_name="UAT STORE 3",
+    super_merchant_name="ECOCASH",
+    location="Harare",
+    country_code="ZW",
     environment="sandbox",
     currency="USD",
 )
 
+TEST_MSISDN = "0779587612"  # your whitelisted sandbox test number
+
 with EcoCashClient(config) as client:
 
-    # C2B payment
+    # Charge (tranType=MER)
     try:
         payment = client.c2b.charge(
             PaymentRequest(
-                customer_msisdn="0771234567",
+                end_user_id=TEST_MSISDN,
                 amount=25.00,
-                reason="Invoice INV-001",
+                description="Invoice INV-001",
             )
         )
-        print(payment.status, payment.ecocash_transaction_reference)
     except EcoCashValidationError as e:
         print(f"Validation: {e} (field={e.field})")
+        raise SystemExit(1)
     except EcoCashAPIError as e:
         print(f"API error {e.status_code}: {e}")
+        raise SystemExit(1)
 
-    # Transaction status
+    print(payment.status, payment.transaction_id)
+
+    # Transaction status (GET lookup)
     status = client.status.lookup(
         TransactionStatusRequest(
-            source_mobile_number="0771234567",
-            source_reference=payment.source_reference,
+            end_user_id=TEST_MSISDN,
+            client_correlator=payment.client_correlator,
         )
     )
     print(status.status, status.amount)
 
-    # Refund
+    # Refund (tranType=REF) — use RefundRequest(tran_type="REV") for a
+    # merchant-initiated reversal instead.
     if status.status == "SUCCESS":
         refund = client.refund.refund(
             RefundRequest(
-                original_transaction_reference=payment.ecocash_transaction_reference,
-                source_mobile_number="0771234567",
+                original_ecocash_reference=payment.transaction_id,
+                end_user_id=TEST_MSISDN,
                 amount=25.00,
-                reason="Customer request",
+                description="Customer request",
             )
         )
         print(refund.status)

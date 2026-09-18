@@ -17,14 +17,26 @@ from ecocash import (
 from ecocash.resilience.circuit_breaker import _registry
 
 FAKE_SUCCESS = {
+    "transactionId": "MP230422.1145.T0123456",
+    "clientCorrelator": "ref-001",
     "status": "SUCCESS",
-    "message": "Payment initiated",
-    "ecocashTransactionReference": "ECO-TEST-001",
+    "statusCode": "200",
+    "statusMessage": "Transaction Successful",
+    "amount": 10.00,
+    "currency": "USD",
+    "endUserId": "771234567",
+    "merchantCode": "TEST01",
+    "timestamp": "2024-04-22T11:45:30Z",
 }
 
 CONFIG = TenantConfig(
-    api_key="test-key",
+    username="test-user",
+    password="test-pass",
     merchant_code="TEST01",
+    merchant_pin="1234",
+    merchant_number="788732685",
+    terminal_id="UAT00003",
+    merchant_name="TEST STORE",
     environment="sandbox",
 )
 
@@ -43,10 +55,10 @@ def make_client(store=None, retry_config=None, cb_config=None):
 
 def make_request(ref="ref-001"):
     return PaymentRequest(
-        customer_msisdn="0771234567",
+        end_user_id="0771234567",
         amount=10.00,
-        reason="Test",
-        source_reference=ref,
+        description="Test",
+        client_correlator=ref,
     )
 
 
@@ -61,11 +73,11 @@ def test_successful_payment_persisted():
         resp = client.c2b.charge(make_request())
 
     assert resp.status == "SUCCESS"
-    assert resp.ecocash_transaction_reference == "ECO-TEST-001"
+    assert resp.transaction_id == "MP230422.1145.T0123456"
 
     record = store.get("TEST01", "ref-001")
     assert record.state == PaymentState.SUCCESS
-    assert record.ecocash_reference == "ECO-TEST-001"
+    assert record.ecocash_reference == "MP230422.1145.T0123456"
     assert record.attempts == 1
 
 
@@ -80,8 +92,8 @@ def test_idempotency_returns_cached_on_second_call():
 
     mock_post.assert_called_once()
     assert resp2.status == "SUCCESS"
-    assert resp2.ecocash_transaction_reference == "ECO-TEST-001"
-    assert "idempotency" in resp2.message.lower() or resp2.message
+    assert resp2.transaction_id == "MP230422.1145.T0123456"
+    assert resp2.status_message
 
 
 # Test 3: retry on network error then succeeds
@@ -189,7 +201,7 @@ def test_pending_record_reuses_reference():
     pending = IdempotencyRecord(
         source_reference="ref-stalled",
         tenant_id="TEST01",
-        phone="263771234567",
+        phone="771234567",
         amount=10.00,
         currency="USD",
         reason="Test",

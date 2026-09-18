@@ -1,11 +1,13 @@
 from ..http import EcoCashHTTPClient
 from ..logging import get_logger
 from ..models import RefundRequest, RefundResponse, TenantConfig
-from ..utils import normalize_phone, validate_amount, validate_currency
+from ..utils import normalize_end_user_id, validate_amount, validate_currency
 
+# Per developers.ecocash.co.zw sandbox docs: API 3 — Refund / Reversal.
+# tranType REF = customer refund, REV = merchant reversal.
 PATHS = {
-    "sandbox": "/v2/refund/instant/c2b/sandbox",
-    "live": "/v2/refund/instant/c2b/live",
+    "sandbox": "/payment/v1/transactions/refund/",
+    "live": "/payment/v1/transactions/refund/",
 }
 
 
@@ -17,25 +19,44 @@ class RefundAPI:
 
     def refund(self, request: RefundRequest) -> RefundResponse:
         currency = request.currency or self.config.currency
-        phone = normalize_phone(request.source_mobile_number)
+        end_user_id = normalize_end_user_id(request.end_user_id)
         validate_amount(request.amount)
         validate_currency(currency)
 
         payload = {
-            "originalEcocashTransactionReference": request.original_transaction_reference,
-            "sourceMobileNumber": phone,
-            "amount": str(request.amount),
-            "reasonForRefund": request.reason,
-            "currency": currency,
-            "refundCorrelator": request.refund_correlator,
+            "clientCorrelator": request.client_correlator,
+            "notifyUrl": request.notify_url,
+            "referenceCode": request.reference_code,
+            "tranType": request.tran_type,
+            "originalEcocashReference": request.original_ecocash_reference,
+            "endUserId": end_user_id,
+            "remarks": request.remarks,
+            "transactionOperationStatus": "Charged",
+            "paymentAmount": {
+                "charginginformation": {
+                    "amount": request.amount,
+                    "currency": currency,
+                    "description": request.description,
+                },
+                "chargeMetaData": {
+                    "channel": "POS",
+                },
+            },
+            "merchantCode": self.config.merchant_code,
+            "merchantPin": self.config.merchant_pin,
+            "merchantNumber": self.config.merchant_number,
+            "countryCode": self.config.country_code,
+            "terminalID": self.config.terminal_id,
+            "location": self.config.location,
+            "superMerchantName": self.config.super_merchant_name,
+            "merchantName": self.config.merchant_name,
         }
-        if request.client_name:
-            payload["clientName"] = request.client_name
 
         self.logger.info(
-            "Initiating refund: correlator=%s original_ref=%s amount=%s",
-            request.refund_correlator,
-            request.original_transaction_reference,
+            "Initiating %s: correlator=%s original_ref=%s amount=%s",
+            "refund" if request.tran_type == "REF" else "reversal",
+            request.client_correlator,
+            request.original_ecocash_reference,
             request.amount,
         )
 
@@ -43,16 +64,21 @@ class RefundAPI:
         data = self.http.post(path, payload)
 
         resp = RefundResponse(
-            refund_correlator=request.refund_correlator,
-            ecocash_transaction_reference=data.get("ecocashTransactionReference"),
+            client_correlator=data.get("clientCorrelator", request.client_correlator),
+            transaction_id=data.get("transactionId"),
             status=data.get("status", "UNKNOWN"),
-            message=data.get("message", ""),
+            status_code=data.get("statusCode"),
+            status_message=data.get("statusMessage", ""),
+            original_reference=data.get("originalReference", request.original_ecocash_reference),
+            amount=data.get("amount"),
+            currency=data.get("currency"),
+            timestamp=data.get("timestamp"),
             raw=data,
         )
 
         self.logger.info(
-            "Refund result: correlator=%s status=%s",
-            resp.refund_correlator,
+            "Refund/reversal result: correlator=%s status=%s",
+            resp.client_correlator,
             resp.status,
         )
         return resp

@@ -29,6 +29,15 @@ from .resilience import (
     CircuitBreakerOpenError,
     RetryConfig,
 )
+from .webhooks import (
+    PaymentPoller,
+    PollTimeoutError,
+    WebhookDeliveryResult,
+    WebhookRelay,
+    deliver_webhook,
+    sign_payload,
+    verify_signature,
+)
 
 __all__ = [
     "CircuitBreakerConfig",
@@ -43,9 +52,11 @@ __all__ = [
     "IdempotencyRecord",
     "IdempotencyStore",
     "InMemoryIdempotencyStore",
+    "PaymentPoller",
     "PaymentRequest",
     "PaymentResponse",
     "PaymentState",
+    "PollTimeoutError",
     "RedisIdempotencyStore",
     "RefundRequest",
     "RefundResponse",
@@ -54,4 +65,9 @@ __all__ = [
     "TenantConfig",
     "TransactionStatusRequest",
     "TransactionStatusResponse",
+    "WebhookDeliveryResult",
+    "WebhookRelay",
+    "deliver_webhook",
+    "sign_payload",
+    "verify_signature",
 ]
