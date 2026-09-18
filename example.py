@@ -3,14 +3,14 @@ from ecocash import (
     EcoCashClient,
     EcoCashValidationError,
     PaymentRequest,
+    PollTimeoutError,
     RefundRequest,
     TenantConfig,
-    TransactionStatusRequest,
 )
 
 config = TenantConfig(
     username="sbx_6cfb7c9c9582",
-    password="c2J4XzZjZmI3YzljOTU4Mjo4Y1l2a1pGOHN0blNuZVdQdUxuIQ==",
+    password="8cYvkZF8stnSneWPuLn!",
     merchant_code="001535",
     merchant_pin="1234",
     merchant_number="788732685",
@@ -23,7 +23,7 @@ config = TenantConfig(
     currency="USD",
 )
 
-TEST_MSISDN = "0779587612"  # your whitelisted sandbox test number
+TEST_MSISDN = "0778587612"  # your whitelisted sandbox test number
 
 with EcoCashClient(config) as client:
 
@@ -45,13 +45,22 @@ with EcoCashClient(config) as client:
 
     print(payment.status, payment.transaction_id)
 
-    # Transaction status (GET lookup)
-    status = client.status.lookup(
-        TransactionStatusRequest(
+    # The charge response above is not final — the end user still has to
+    # confirm on their phone. Poll the status endpoint with exponential
+    # backoff until the transaction reaches a terminal status.
+    try:
+        status = client.wait_for_completion(
             end_user_id=TEST_MSISDN,
             client_correlator=payment.client_correlator,
+            interval_seconds=3.0,      # first retry after ~3s
+            backoff_factor=1.5,        # then 4.5s, 6.75s, ...
+            max_interval_seconds=15.0,  # capped at 15s between polls
+            timeout_seconds=120.0,     # give up after 2 minutes
         )
-    )
+    except PollTimeoutError as e:
+        print(f"Still pending after polling: {e}")
+        raise SystemExit(1)
+
     print(status.status, status.amount)
 
     # Refund (tranType=REF) — use RefundRequest(tran_type="REV") for a
